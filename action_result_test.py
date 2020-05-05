@@ -27,6 +27,7 @@ def reward(state,next_state,step):
             break
     
     if (np.array(next_state[0]) == np.array(target_state)).all():
+        #print(target_state)
         agent_reward = 1  #- (step * 0.09)
         done = True
 

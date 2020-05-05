@@ -3,6 +3,7 @@ import os
 import numpy as np
 #from numba import jit, cuda 
 import math
+import csv
 from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense
@@ -17,22 +18,23 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 grid = 5
 state_size = 3
 action_size = 6
+path_to_csv =[["Episode","path"]]
 
 #initial_state = [np.random.randint(0,high=5),np.random.randint(0,high=5),np.random.randint(6,high=10)]
-initial_state = [0,0,6]
-target_state = [2,3,8]
+test_state = [0,3,8]
+#target_state = [3,3,7]
 blockages = []
 
 
 
 
-EPISODES = 50000
+EPISODES = 10000
 stats_per = 10
 steps_in_ep = 10
 
 
 start = timeit.default_timer()
-state2 = np.reshape(initial_state, [1, 3])
+state2 = np.reshape(test_state, [1, 3])
 
 #q_now = 0
 #q_previous = 0
@@ -48,7 +50,7 @@ class DQNAgent:
         self.state_size = state_size
         self.action_size = action_size
         self.memory = deque(maxlen=100)
-        self.gamma = 0.01    # discount rate #0.95
+        self.gamma = 0.9  # discount rate #0.95
         self.epsilon = 0.9   # exploration rate
         self.epsilon_min = 0.001
         self.epsilon_decay = 0.999
@@ -59,8 +61,8 @@ class DQNAgent:
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(Dense(5, input_dim=self.state_size, activation='sigmoid'))
-        model.add(Dense(5 , activation='sigmoid'))
+        model.add(Dense(10, input_dim=self.state_size, activation='sigmoid'))
+        model.add(Dense(10 , activation='sigmoid'))
         model.add(Dense(self.action_size, activation='sigmoid'))
         model.compile(loss='MSE',
                       optimizer = Adam(lr=self.learning_rate))
@@ -211,7 +213,7 @@ if __name__ == "__main__":
 
     for e in range(EPISODES):
         #state = [np.random.randint(0,high=grid),np.random.randint(0,high=grid),np.random.randint(6,high=10)]
-        state = [0,0,6]
+        state = [0,3,8]
         #state = initial_state
         state = np.reshape(state, [1, state_size])
         
@@ -259,7 +261,7 @@ if __name__ == "__main__":
                 print("episode: {}/{}, score: {}, e: {:.2}"
                       .format(e, EPISODES, steps, agent.epsilon))
                 #print(path)
-                success_ep.append([e,steps])
+                success_ep.append([e,steps+1])
                 ep_i = ep_i +1
                 break
             #agent.replay(batch_size)
@@ -298,6 +300,7 @@ if __name__ == "__main__":
             ep_i = 0
         
         print("\npath :",path)
+        path_to_csv.append([e,path])
         print("epsilon :", agent.epsilon)
         epsilon_change.append([e,agent.epsilon])
         #print("reward :", ep_reward)
@@ -320,6 +323,10 @@ arr = agent.model.predict(state2)
 print("model prediction :", arr)
 
 print("max value position",agent.find_item(np.amax( arr[0]),arr))
+with open('episode_path.csv',mode='w') as episode_path:
+    episode_path_writer = csv.writer(episode_path)
+    for ep in path_to_csv:
+        episode_path_writer.writerow(ep) 
 
 
 
@@ -333,15 +340,15 @@ plt.ylabel("Number of hits")
 plt.title("Learning of boundaries")
 plt.legend()
 
-'''
+
 plt.figure(2)
 plt.plot((np.array(success_per_n_ep))[:,1],(np.array(success_per_n_ep))[:,0],label="success rate")
 plt.xlabel("Success per " + str(stats_per) +" episodes")
 plt.ylabel("Number of success")
 plt.title("success rate")
 plt.legend()
-'''
-plt.figure(2)
+
+plt.figure(3)
 plt.plot(count,state2_ac0, label = 'front right')
 plt.plot(count,state2_ac1, label = 'back right')
 plt.plot(count,state2_ac2, label = 'back left')
@@ -350,24 +357,24 @@ plt.plot(count,state2_ac4, label = 'front')
 plt.plot(count,state2_ac5, label = 'back')
 plt.xlabel("number")
 plt.ylabel("action values")
-plt.title("analysis of action taken by agent")
+plt.title("analysis of action taken by agent " + str(test_state))
 plt.legend()
 
-plt.figure(3)
+plt.figure(4)
 plt.plot(np.array(cum_reward)[:,0], np.array(cum_reward)[:,1],label='cumulative reward')
 plt.plot(np.array(epsilon_change)[:,0],np.array(epsilon_change)[:,1],label='epsilon value')
 plt.xlabel("episodes")
 plt.ylabel("rewards")
 plt.title("Reward per episode")
 plt.legend()
-
-plt.figure(4)
+'''
+plt.figure(5)
 plt.plot(np.array(cal_loss)[:,0],np.array(cal_loss)[:,1],label='loss')
 plt.xlabel("count")
 plt.ylabel("loss")
 plt.title("NN loss")
 plt.legend()
-
+'''
 stop = timeit.default_timer()
 print('\nTime taken: ', stop - start) 
 

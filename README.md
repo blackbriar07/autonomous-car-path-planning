@@ -9,7 +9,7 @@ car_graphical_auto_control.py :
 
 The same car environemnet where you can suggest the path and the car moves accordingly in the path given.
 
-car_dqn_1 :
+car_dqn_test :
 
 the deep reinforcemnet learning used for the car to move to its end point .
 the action spaces are discrete 

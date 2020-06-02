@@ -11,6 +11,8 @@ from keras.optimizers import Adam
 import action_result_test
 import matplotlib.pyplot as plt
 import timeit
+import file_writing_cardqn 
+
 #from variables import *
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
@@ -21,14 +23,24 @@ action_size = 6
 path_to_csv =[["Episode","path"]]
 
 #initial_state = [np.random.randint(0,high=5),np.random.randint(0,high=5),np.random.randint(6,high=10)]
-test_state = [0,3,8]
+test_state = [1,1,7]
 #target_state = [3,3,7]
 blockages = []
 
+states = []
 
 
+for i in range(grid):
+    for j in range(grid):
+        for k in range(6,10):
+            states.append(np.reshape([i,j,k],[1,3]))
 
-EPISODES = 10000
+state_analysis_array = []
+for i in range(len(states)):
+    state_analysis_array.append([["action0","action1","action2","action3","action4","action5"]])
+
+
+EPISODES = 1000
 stats_per = 10
 steps_in_ep = 10
 
@@ -95,20 +107,15 @@ class DQNAgent:
         #print("calculating neural networ")
         return np.argmax(act_values[0])  # returns action
     '''
-    def state_action_graph(self,state_nn_value):
-        state2_ac0.append(state_nn_value[0][0])
-        state2_ac1.append(state_nn_value[0][1])
-        state2_ac2.append(state_nn_value[0][2])
-        state2_ac3.append(state_nn_value[0][3])
-        state2_ac4.append(state_nn_value[0][4])
-        state2_ac5.append(state_nn_value[0][5])
-
+    
 
     def calculate_loss(self,state,next_state,reward):
         q_previous = np.amax(self.model.predict(state)[0])
         q_now = (reward + self.gamma *
                           np.amax(self.model.predict(next_state)[0]))
+        #loss, accuracy = self.model.evaluate(state,reward,verbose = 0)
 
+        #return loss
         return (q_now - q_previous)**2
     #@jit 
     def replay(self, batch_size):
@@ -148,6 +155,22 @@ class DQNAgent:
         for i,posi in enumerate(arr[0]):
             if posi == element:
                 return i
+    
+    def state_action_graph(self,state_nn_value):
+        state2_ac0.append(state_nn_value[0][0])
+        state2_ac1.append(state_nn_value[0][1])
+        state2_ac2.append(state_nn_value[0][2])
+        state2_ac3.append(state_nn_value[0][3])
+        state2_ac4.append(state_nn_value[0][4])
+        state2_ac5.append(state_nn_value[0][5])
+
+
+    def state_analysis(self,i,ana_state_array):
+        state_analysis_array[i].append(ana_state_array)
+        
+
+
+
 
 
 if __name__ == "__main__":
@@ -164,20 +187,13 @@ if __name__ == "__main__":
         'back' : 5
     }
 
-    states = []
+    
+
+    
 
 
-    for i in range(grid):
-        for j in range(grid):
-            for k in range(6,10):
-                states.append([i,j,k])
 
-    actions = []
-    action_i =[]
-    for i in range(len(states)):
-        for j in range(6):
-            action_i.append(random.random())
-        action_i = []
+    
 
     agent_orientation = {
         'N' : 6,
@@ -210,10 +226,11 @@ if __name__ == "__main__":
     s_i = 0
     ep_i = 0
     count_c_loss = 0
+    predicted_array = []
 
     for e in range(EPISODES):
         #state = [np.random.randint(0,high=grid),np.random.randint(0,high=grid),np.random.randint(6,high=10)]
-        state = [0,3,8]
+        state = [1,1,6]
         #state = initial_state
         state = np.reshape(state, [1, state_size])
         
@@ -226,6 +243,14 @@ if __name__ == "__main__":
         print("initial state:", state)
         state_nn_value = agent.model.predict(state2)
         print("\npath value :", state_nn_value)
+        
+        for i in range(len(states)):
+            predicted_array = agent.model.predict(states[i])
+            #print("predicted_array")
+            #print(predicted_array[0])
+            agent.state_analysis(i,predicted_array[0])
+        
+
         print("max value",agent.find_item(np.amax( state_nn_value[0]),state_nn_value))
         agent.state_action_graph(state_nn_value)
         for steps in range(steps_in_ep):
@@ -322,13 +347,18 @@ print(state2)
 arr = agent.model.predict(state2)
 print("model prediction :", arr)
 
+file_writing_cardqn.file_writing(state_analysis_array,states)
+#print("state_analysis_array :",len(state_analysis_array[0]) )
+#print("states",len(states))
+
 print("max value position",agent.find_item(np.amax( arr[0]),arr))
-with open('episode_path.csv',mode='w') as episode_path:
+with open('episode_path.csv',mode='w',newline = '') as episode_path:
     episode_path_writer = csv.writer(episode_path)
     for ep in path_to_csv:
         episode_path_writer.writerow(ep) 
 
-
+#print(" ")
+#print(state_analysis_array)
 
 plt.figure(1)
 plt.plot((np.array(north_boundary))[:,1],(np.array(north_boundary))[:,0],label = 'north boundary')

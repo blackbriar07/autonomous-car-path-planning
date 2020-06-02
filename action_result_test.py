@@ -13,7 +13,7 @@ def reward(state,next_state,step):
     block_hit = False
     next_state_location = [[next_state[0][0],next_state[0][1]]]
     
-    agent_reward = 0.08#5.5 - math.sqrt((state[0][0] - target_state[0])**2 + (state[0][1] - target_state[1])**2 ) # 2 - (step * 0.001)
+    agent_reward = 0.08 + 0.03*(- math.sqrt((state[0][0] - target_state[0])**2 + (state[0][1] - target_state[1])**2 )) # 2 - (step * 0.001)
     done = False
     
     if next_state[0][0] < 0 or next_state[0][1] < 0 or next_state[0][0] > (grid-1) or next_state[0][1] > (grid-1)  :
